@@ -1,0 +1,8 @@
+{
+  "name": "CureBridge AI",
+  "description": "Prescription visual analyzer and voice assistant for low-literacy patients with English, Roman Urdu, and Urdu support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
