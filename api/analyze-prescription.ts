@@ -33,11 +33,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   "englishSpeechText": "Prescription analyzed successfully.",
   "pureUrduSpeechText": "Nuskha read ho gaya hai."
 }
-Keep text short and concise. Do not use markdown syntax. Return valid JSON only.`;
+Keep response short and concise. Do not use markdown syntax. Return raw JSON only.`;
 
-    // High speed model with short token output to guarantee < 5 second response
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.8-flash',
       contents: [
         {
           inlineData: {
@@ -48,9 +47,12 @@ Keep text short and concise. Do not use markdown syntax. Return valid JSON only.
         { text: prompt },
       ],
       config: {
-        maxOutputTokens: 800,
-        temperature: 0.2
-      }
+        maxOutputTokens: 500,
+        temperature: 0.1,
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
+      } as any
     });
 
     let text = response.text || '{}';
@@ -100,7 +102,6 @@ Keep text short and concise. Do not use markdown syntax. Return valid JSON only.
       pureUrduSpeechText: parsedData.pureUrduSpeechText || "Nuskha read ho gaya hai."
     };
 
-    // Returns response formatted for both potential frontend expectations
     return res.status(200).json({
       success: true,
       data: safeData,
