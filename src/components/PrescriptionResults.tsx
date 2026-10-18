@@ -13,13 +13,10 @@ import {
   Volume2,
   Calendar,
   User,
-  Building2,
-  CheckCircle,
-  Eye,
   Pill,
   ShieldAlert,
-  HelpCircle,
   RefreshCw,
+  Eye,
 } from 'lucide-react';
 
 interface PrescriptionResultsProps {
@@ -37,10 +34,19 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
   onPlaySingleMedicine,
   onScanAnother,
 }) => {
-  const t = translations[currentLang];
+  const t = translations[currentLang] || translations['en'];
   const isUrdu = currentLang === 'ur';
 
   const [showSlipModal, setShowSlipModal] = useState(false);
+
+  // Safe text resolver to prevent crash on missing language keys
+  const getLangText = (obj: any, lang: Language) => {
+    if (!obj) return '';
+    if (typeof obj === 'string') return obj;
+    return obj[lang] || obj['en'] || obj['ur'] || '';
+  };
+
+  const medicines = analysis?.medicines || [];
 
   return (
     <div className="w-full space-y-10 animate-fadeIn">
@@ -56,22 +62,22 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                 isUrdu ? 'font-urdu-title text-3xl' : ''
               }`}
             >
-              {analysis.clinicName || 'Medical Clinic'}
+              {analysis?.clinicName || 'Medical Clinic'}
             </h2>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 font-medium">
-              {analysis.doctorName && (
+              {analysis?.doctorName && (
                 <span className="flex items-center gap-1.5 text-emerald-800 font-semibold">
                   <User className="w-4 h-4 text-emerald-600" />
                   {analysis.doctorName}
                 </span>
               )}
-              {analysis.patientName && (
+              {analysis?.patientName && (
                 <span className="flex items-center gap-1.5">
                   <span className="text-slate-400">·</span>
                   <span className="font-semibold text-slate-800">{analysis.patientName}</span>
                 </span>
               )}
-              {analysis.date && (
+              {analysis?.date && (
                 <span className="flex items-center gap-1.5">
                   <span className="text-slate-400">·</span>
                   <Calendar className="w-4 h-4 text-slate-400" />
@@ -90,7 +96,13 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
               >
                 <Eye className="w-4 h-4" />
-                <span>{currentLang === 'en' ? 'View Paper Slip' : currentLang === 'romanUrdu' ? 'Parchi Ki Photo Dekhein' : 'اصل پرچی دیکھیں'}</span>
+                <span>
+                  {currentLang === 'en'
+                    ? 'View Paper Slip'
+                    : currentLang === 'romanUrdu'
+                    ? 'Parchi Ki Photo Dekhein'
+                    : 'اصل پرچی دیکھیں'}
+                </span>
               </button>
 
               <button
@@ -99,7 +111,13 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>{currentLang === 'en' ? 'New Scan' : currentLang === 'romanUrdu' ? 'Nayi Parchi' : 'نیا نسخہ'}</span>
+                <span>
+                  {currentLang === 'en'
+                    ? 'New Scan'
+                    : currentLang === 'romanUrdu'
+                    ? 'Nayi Parchi'
+                    : 'نیا نسخہ'}
+                </span>
               </button>
             </div>
           )}
@@ -110,20 +128,25 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <span>
-              {analysis.medicines.length}{' '}
-              {currentLang === 'en' ? 'Medications Prescribed' : currentLang === 'romanUrdu' ? 'Dawaein Likhi Hain' : 'دوائیاں تجویز کی گئی ہیں'}
+              {medicines.length}{' '}
+              {currentLang === 'en'
+                ? 'Medications Prescribed'
+                : currentLang === 'romanUrdu'
+                ? 'Dawaein Likhi Hain'
+                : 'دوائیاں تجویز کی گئی ہیں'}
             </span>
           </div>
           <span className="text-xs text-slate-500 font-normal">
-            {currentLang === 'en' ? 'Instant 3-Language Sync Active' : currentLang === 'romanUrdu' ? 'Urdu, Roman Urdu aur English mein dastiyab' : 'تین زبانوں میں فوری ترجمہ فعال'}
+            {currentLang === 'en'
+              ? 'Instant 3-Language Sync Active'
+              : currentLang === 'romanUrdu'
+              ? 'Urdu, Roman Urdu aur English mein dastiyab'
+              : 'تین زبانوں میں فوری ترجمہ فعال'}
           </span>
         </div>
       </div>
 
-      {/* ========================================================
-          SECTION 1: MEDICINE NAME & PURPOSE
-          (Dawai Ka Naam Aur Maqsad)
-      ======================================================== */}
+      {/* SECTION 1: MEDICINE NAME & PURPOSE */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-100 shadow-sm">
         <div className="flex items-start justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3.5">
@@ -144,9 +167,9 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {analysis.medicines.map((med, index) => (
+          {medicines.map((med, index) => (
             <div
-              key={med.id || index}
+              key={med?.id || index}
               className="rounded-2xl p-5 border-2 border-emerald-100 bg-gradient-to-b from-emerald-50/40 to-white hover:border-emerald-300 transition-all flex flex-col justify-between"
             >
               <div>
@@ -154,18 +177,18 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                 <div className="flex items-center justify-between mb-3 text-xs font-bold text-emerald-800">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100/90 text-emerald-900">
                     <Pill className="w-3.5 h-3.5" />
-                    {med.form} {med.strength ? `· ${med.strength}` : ''}
+                    {med?.form || 'Medicine'} {med?.strength ? `· ${med.strength}` : ''}
                   </span>
                   <span className="text-slate-400 font-mono">#{index + 1}</span>
                 </div>
 
                 {/* Brand Name */}
                 <h4 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-1">
-                  {med.name}
+                  {med?.name || 'Unnamed Medicine'}
                 </h4>
 
                 {/* Generic / Formula name */}
-                {med.genericName && (
+                {med?.genericName && (
                   <p className="text-xs font-semibold text-emerald-700 mb-4 font-mono">
                     {med.genericName}
                   </p>
@@ -181,12 +204,12 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                       isUrdu ? 'font-urdu text-lg' : ''
                     }`}
                   >
-                    {med.purpose[currentLang]}
+                    {getLangText(med?.purpose, currentLang) || 'As prescribed'}
                   </p>
                 </div>
               </div>
 
-              {/* Individual Audio Narration button for this specific medication */}
+              {/* Individual Audio Narration button */}
               <button
                 type="button"
                 onClick={() => onPlaySingleMedicine(med)}
@@ -200,10 +223,7 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
         </div>
       </section>
 
-      {/* ========================================================
-          SECTION 2: DOSAGE & TIMINGS WITH VISUAL TIME ICONS
-          (Kab Aur Kitni Dafa Leni Hai - Subah 🌞, Dopahar 🌤️, Raat 🌙)
-      ======================================================== */}
+      {/* SECTION 2: DOSAGE & TIMINGS WITH VISUAL TIME ICONS */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-100 shadow-sm">
         <div className="flex items-start justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3.5">
@@ -224,12 +244,13 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
         </div>
 
         <div className="space-y-6">
-          {analysis.medicines.map((med, index) => {
-            const { timing, duration } = med;
+          {medicines.map((med, index) => {
+            const timing = med?.timing;
+            const duration = med?.duration;
 
             return (
               <div
-                key={med.id || index}
+                key={med?.id || index}
                 className="rounded-2xl p-5 sm:p-6 border-2 border-slate-200/90 bg-white hover:border-emerald-300 transition-all shadow-2xs"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
@@ -238,11 +259,11 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                       {index + 1}
                     </span>
                     <div>
-                      <h4 className="text-xl font-black text-slate-900">{med.name}</h4>
+                      <h4 className="text-xl font-black text-slate-900">{med?.name || 'Medicine'}</h4>
                       <span className="text-xs font-semibold text-slate-500">
-                        {t.dosageLabel}: <strong className="text-emerald-800">{timing.dosageAmount}</strong>
+                        {t.dosageLabel}: <strong className="text-emerald-800">{timing?.dosageAmount || '1 dose'}</strong>
                         {' · '}
-                        {t.durationLabel}: <strong className="text-emerald-800">{duration[currentLang]}</strong>
+                        {t.durationLabel}: <strong className="text-emerald-800">{getLangText(duration, currentLang) || 'As directed'}</strong>
                       </span>
                     </div>
                   </div>
@@ -251,30 +272,30 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs sm:text-sm font-bold text-amber-900 self-start md:self-auto">
                     <Utensils className="w-4 h-4 text-amber-700 shrink-0" />
                     <span className={isUrdu ? 'font-urdu' : ''}>
-                      {timing.withFood === 'before'
+                      {timing?.withFood === 'before'
                         ? t.mealBefore
-                        : timing.withFood === 'after'
+                        : timing?.withFood === 'after'
                         ? t.mealAfter
-                        : timing.withFood === 'with'
+                        : timing?.withFood === 'with'
                         ? t.mealWith
                         : t.mealAnytime}
                     </span>
                   </div>
                 </div>
 
-                {/* 3 Visual Time Blocks: Morning, Afternoon, Night */}
+                {/* 3 Visual Time Blocks */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-4">
-                  {/* MORNING (Subah) */}
+                  {/* MORNING */}
                   <div
                     className={`rounded-2xl p-4 border-2 transition-all flex items-center gap-3.5 ${
-                      timing.morning
+                      timing?.morning
                         ? 'bg-amber-500/10 border-amber-400 text-amber-950 shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
                     }`}
                   >
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                        timing.morning ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : 'bg-slate-200 text-slate-400'
+                        timing?.morning ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30' : 'bg-slate-200 text-slate-400'
                       }`}
                     >
                       <Sun className="w-7 h-7" />
@@ -282,23 +303,23 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                     <div>
                       <span className="text-base font-extrabold block">{t.timingMorning}</span>
                       <span className="text-xs font-semibold block">
-                        {timing.morning ? timing.dosageAmount : (currentLang === 'en' ? 'Not Scheduled' : currentLang === 'romanUrdu' ? 'Nahi Leni' : 'نہیں لینی')}
+                        {timing?.morning ? timing.dosageAmount || '1' : currentLang === 'en' ? 'Not Scheduled' : currentLang === 'romanUrdu' ? 'Nahi Leni' : 'نہیں لینی'}
                       </span>
                       <span className="text-[11px] text-slate-500 hidden sm:block">{t.timingMorningDesc}</span>
                     </div>
                   </div>
 
-                  {/* AFTERNOON (Dopahar) */}
+                  {/* AFTERNOON */}
                   <div
                     className={`rounded-2xl p-4 border-2 transition-all flex items-center gap-3.5 ${
-                      timing.afternoon
+                      timing?.afternoon
                         ? 'bg-yellow-500/10 border-yellow-400 text-yellow-950 shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
                     }`}
                   >
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                        timing.afternoon ? 'bg-yellow-500 text-white shadow-md shadow-yellow-500/30' : 'bg-slate-200 text-slate-400'
+                        timing?.afternoon ? 'bg-yellow-500 text-white shadow-md shadow-yellow-500/30' : 'bg-slate-200 text-slate-400'
                       }`}
                     >
                       <CloudSun className="w-7 h-7" />
@@ -306,23 +327,23 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                     <div>
                       <span className="text-base font-extrabold block">{t.timingAfternoon}</span>
                       <span className="text-xs font-semibold block">
-                        {timing.afternoon ? timing.dosageAmount : (currentLang === 'en' ? 'Not Scheduled' : currentLang === 'romanUrdu' ? 'Nahi Leni' : 'نہیں لینی')}
+                        {timing?.afternoon ? timing.dosageAmount || '1' : currentLang === 'en' ? 'Not Scheduled' : currentLang === 'romanUrdu' ? 'Nahi Leni' : 'نہیں لینی'}
                       </span>
                       <span className="text-[11px] text-slate-500 hidden sm:block">{t.timingAfternoonDesc}</span>
                     </div>
                   </div>
 
-                  {/* NIGHT (Raat) */}
+                  {/* NIGHT */}
                   <div
                     className={`rounded-2xl p-4 border-2 transition-all flex items-center gap-3.5 ${
-                      timing.night
+                      timing?.night
                         ? 'bg-indigo-500/10 border-indigo-400 text-indigo-950 shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
                     }`}
                   >
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                        timing.night ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-200 text-slate-400'
+                        timing?.night ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-200 text-slate-400'
                       }`}
                     >
                       <Moon className="w-7 h-7" />
@@ -330,7 +351,7 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                     <div>
                       <span className="text-base font-extrabold block">{t.timingNight}</span>
                       <span className="text-xs font-semibold block">
-                        {timing.night ? timing.dosageAmount : (currentLang === 'en' ? 'Not Scheduled' : currentLang === 'romanUrdu' ? 'Nahi Leni' : 'نہیں لینی')}
+                        {timing?.night ? timing.dosageAmount || '1' : currentLang === 'en' ? 'Not Scheduled' : currentLang === 'romanUrdu' ? 'Nahi Leni' : 'نہیں لینی'}
                       </span>
                       <span className="text-[11px] text-slate-500 hidden sm:block">{t.timingNightDesc}</span>
                     </div>
@@ -341,7 +362,7 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
                 <div className="bg-emerald-50/70 rounded-xl p-3.5 border border-emerald-100 flex items-start gap-2.5">
                   <Clock className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                   <p className={`text-sm sm:text-base font-bold text-emerald-950 ${isUrdu ? 'font-urdu' : ''}`}>
-                    {timing.instructions[currentLang]}
+                    {getLangText(timing?.instructions, currentLang) || 'Follow doctor instructions'}
                   </p>
                 </div>
               </div>
@@ -350,10 +371,7 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
         </div>
       </section>
 
-      {/* ========================================================
-          SECTION 3: SPECIAL PRECAUTIONS & WARNINGS
-          (Khaas Hidayat Aur Ehtiyat)
-      ======================================================== */}
+      {/* SECTION 3: SPECIAL PRECAUTIONS & WARNINGS */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-100 shadow-sm">
         <div className="flex items-start justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3.5">
@@ -379,9 +397,9 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
             {currentLang === 'en' ? 'Individual Medicine Rules' : currentLang === 'romanUrdu' ? 'Har Dawai Ki Khaas Ehtiyat' : 'ہر دوائی کے لیے ضروری احتیاط'}
           </h4>
 
-          {analysis.medicines.map((med, index) => (
+          {medicines.map((med, index) => (
             <div
-              key={med.id || index}
+              key={med?.id || index}
               className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 flex items-start gap-3.5"
             >
               <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
@@ -389,10 +407,10 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
               </div>
               <div>
                 <strong className="text-sm font-black text-slate-900 block mb-0.5">
-                  {med.name} ({med.form}):
+                  {med?.name || 'Medicine'} ({med?.form || 'Dose'}):
                 </strong>
                 <p className={`text-sm font-medium text-amber-950 ${isUrdu ? 'font-urdu' : ''}`}>
-                  {med.precautions[currentLang]}
+                  {getLangText(med?.precautions, currentLang) || 'None specified'}
                 </p>
               </div>
             </div>
@@ -400,7 +418,7 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
         </div>
 
         {/* Doctor's Overall Advice Box */}
-        {analysis.overallAdvice && (
+        {analysis?.overallAdvice && (
           <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 mb-6">
             <div className="flex items-center gap-2 mb-2">
               <FileCheck2 className="w-5 h-5 text-emerald-700" />
@@ -409,13 +427,13 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
               </h4>
             </div>
             <p className={`text-base font-medium text-emerald-900 leading-relaxed ${isUrdu ? 'font-urdu text-lg' : ''}`}>
-              {analysis.overallAdvice[currentLang]}
+              {getLangText(analysis.overallAdvice, currentLang)}
             </p>
           </div>
         )}
 
         {/* Safety Warnings List */}
-        {analysis.warnings && analysis.warnings.length > 0 && (
+        {analysis?.warnings && analysis.warnings.length > 0 && (
           <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
             <div className="flex items-center gap-2 mb-3">
               <ShieldAlert className="w-5 h-5 text-rose-600" />
@@ -435,7 +453,7 @@ export const PrescriptionResults: React.FC<PrescriptionResultsProps> = ({
         )}
       </section>
 
-      {/* Patient Care Utilities: Save / Download & Share via WhatsApp */}
+      {/* Patient Care Utilities */}
       <PrescriptionExportBar currentLang={currentLang} analysis={analysis} />
 
       {/* Modal / Lightbox for Scanned Paper Slip */}
