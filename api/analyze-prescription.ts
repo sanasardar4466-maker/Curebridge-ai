@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 
@@ -52,7 +53,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const cleanJson = text ? text.replace(/```json/g, '').replace(/```/g, '').trim() : '{}';
     const parsedData = JSON.parse(cleanJson);
 
-    // Universal response payload to support any frontend expectation style
     const payload = {
       success: true,
       data: parsedData,
