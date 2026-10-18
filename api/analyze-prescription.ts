@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     Ensure it is valid JSON only.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents: [
         {
           inlineData: {
@@ -51,12 +51,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const text = response.text;
     const cleanJson = text ? text.replace(/```json/g, '').replace(/```/g, '').trim() : '{}';
-    const parsedData = JSON.parse(cleanJson);
+    let parsedData = {};
+    
+    try {
+      parsedData = JSON.parse(cleanJson);
+    } catch (parseErr) {
+      console.error('JSON Parse Error, raw text was:', text);
+      parsedData = {};
+    }
+
+    // --- SAFETY SANITIZATION (Prevents Frontend .en crashes) ---
+    const formatLangObj = (field: any) => {
+      if (!field) return { en: '', ur: '' };
+      if (typeof field === 'string') return { en: field, ur: '' };
+      return {
+        en: typeof field.en === 'string' ? field.en : (typeof field === 'string' ? field : ''),
+        ur: typeof field.ur === 'string' ? field.ur : ''
+      };
+    };
+
+    const sanitizedMedicines = Array.isArray(parsedData.medicines) 
+      ? parsedData.medicines.map((med: any) => {
+          let timingInst = { en: '', ur: '' };
+          if (med?.timing?.instructions) {
+            timingInst = formatLangObj(med.timing.instructions);
+          } else if (med?.timing) {
+            timingInst = formatLangObj(med.timing);
+          }
+
+          return {
+            name: med?.name || 'Unknown Medicine',
+            dosage: med?.dosage || '',
+            purpose: formatLangObj(med?.purpose),
+            timing: { instructions: timingInst },
+            precautions: formatLangObj(med?.precautions)
+          };
+        }) 
+      : [];
+
+    const sanitizedData = {
+      patientName: parsedData.patientName || 'Not Specified',
+      date: parsedData.date || '',
+      diagnosis: parsedData.diagnosis || '',
+      medicines: sanitizedMedicines,
+      englishSpeechText: parsedData.englishSpeechText || '',
+      pureUrduSpeechText: parsedData.pureUrduSpeechText || ''
+    };
 
     const payload = {
       success: true,
-      data: parsedData,
-      ...parsedData
+      data: sanitizedData,
+      ...sanitizedData
     };
 
     return res.status(200).json(payload);
